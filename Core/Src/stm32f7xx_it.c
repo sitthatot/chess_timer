@@ -59,6 +59,8 @@ extern int state;
 extern uint8_t playerSignal; //0==white 1==black
 extern int sendZero;
 extern int sendOne;
+extern int sendTwo;
+extern char ch1;
 
 /* USER CODE END PV */
 
@@ -90,7 +92,7 @@ void CountDown(int *playerMinute, int *playerSecond)
 
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim1;
-extern TIM_HandleTypeDef htim2;
+extern UART_HandleTypeDef huart6;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -180,6 +182,8 @@ void EXTI3_IRQHandler(void)
   if (state == 3) {
   				sendZero = 0;
   				sendOne = 0;
+  				sendTwo = 0;
+  				ch1 = '0';
   				state = 0;
   			}
   /* USER CODE END EXTI3_IRQn 1 */
@@ -207,34 +211,22 @@ void TIM1_UP_TIM10_IRQHandler(void)
   CountDown(&minuteB, &secondB);
 
   }
-//  	  if(secondA == -1)
-//  	  {
-//  		  if(minuteA == 0)
-//  		  {
-//  			secondA = 0;
-//  		  }
-//  		  if(minuteA != 0)
-//  		  {
-//  			secondA = 59;
-//  			minuteA--;
-//  		  }
-//  	  }
-//  print("a");
+
   /* USER CODE END TIM1_UP_TIM10_IRQn 1 */
 }
 
 /**
-  * @brief This function handles TIM2 global interrupt.
+  * @brief This function handles USART6 global interrupt.
   */
-void TIM2_IRQHandler(void)
+void USART6_IRQHandler(void)
 {
-  /* USER CODE BEGIN TIM2_IRQn 0 */
+  /* USER CODE BEGIN USART6_IRQn 0 */
 
-  /* USER CODE END TIM2_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim2);
-  /* USER CODE BEGIN TIM2_IRQn 1 */
+  /* USER CODE END USART6_IRQn 0 */
+  HAL_UART_IRQHandler(&huart6);
+  /* USER CODE BEGIN USART6_IRQn 1 */
 
-  /* USER CODE END TIM2_IRQn 1 */
+  /* USER CODE END USART6_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

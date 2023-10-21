@@ -60,9 +60,6 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 volatile uint32_t adc_val = 0;
-uint32_t dutyCycle = 25;
-uint8_t pwm;
-
 int minuteA = 10;
 int secondA = 0;
 char toDec45[2];
@@ -72,6 +69,7 @@ char timeString[10];
 int state = 0;
 int sendZero = 0;
 int sendOne = 0;
+int sendTwo = 0;
 int swing = 1;
 uint8_t playerSignal = 0; //0==white 1==black
 uint8_t isBackgroundFill = 0; //0 == pause
@@ -101,23 +99,21 @@ void displayTime(int minute, int second) {
 }
 void display4096_to_45(uint32_t myNumber) {
 	currentVal = (45 * myNumber) / 4096;
-	if(currentVal != lastVal){
+	if (currentVal != lastVal) {
 		if (currentVal >= lastVal - swing && currentVal <= lastVal + swing) {
-		            // If it's within the swing range, don't update lastVal
-		        } else {
-		            lastVal = currentVal;
-		            sprintf(toDec45, "b%d", lastVal);
-		            print(toDec45);
-		            HAL_UART_Transmit(&huart6, (uint8_t*)toDec45, strlen(toDec45), 1000);
-		            print("\r\n");
-		        }
+			// If it's within the swing range, don't update lastVal
+		} else {
+			lastVal = currentVal;
+			sprintf(toDec45, "b%02d", lastVal);
+			//print(toDec45);
+			HAL_UART_Transmit(&huart6, (uint8_t*) toDec45, strlen(toDec45),
+					1000);
+			//print("\r\n");
+		}
 	}
 
 }
-//void FindVin(uint32_t num) {
-//	vin = (3.6f * num) / 4096.0f;
-//	sprintf(vin_str, "%.2f", vin);
-//}
+
 /* USER CODE END 0 */
 
 /**
@@ -127,8 +123,6 @@ void display4096_to_45(uint32_t myNumber) {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	uint16_t color;
-	uint16_t bg;
   /* USER CODE END 1 */
 
   /* Enable I-Cache---------------------------------------------------------*/
@@ -166,8 +160,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	ILI9341_Init(); //initial driver setup to drive ili9341
 	HAL_ADC_Start(&hadc1);
-
-	char stateString[10];
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -178,18 +170,19 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 		while (HAL_ADC_PollForConversion(&hadc1, 100) != HAL_OK) {
-				}
-				adc_val = HAL_ADC_GetValue(&hadc1);
-				display4096_to_45(adc_val);
-
+		}
+		adc_val = HAL_ADC_GetValue(&hadc1);
+		display4096_to_45(adc_val);
+//		while(__HAL_UART_GET_FLAG(&huart6,UART_FLAG_RXNE) == RESET){}
 		HAL_UART_Receive(&huart6, (uint8_t*) &ch1, 1, 1000);
 //		HAL_UART_Receive(&huart3, (uint8_t*) &ch1, 1, 1000);
+		print(ch1);
 		if (ch1 == '0') {
 			playerSignal = 0;
 		} else if (ch1 == '1') {
 			playerSignal = 1;
 		}
-		if(state != 1){
+		if (state != 1) {
 			isBackgroundFill = 0;
 		}
 
@@ -203,22 +196,24 @@ int main(void)
 
 			if (sendZero == 0) {
 				//send 0
-				print("0");
-				HAL_UART_Transmit(&huart6, (uint8_t*) "0", 1, 1000);
+				//print("0");
+				HAL_UART_Transmit(&huart6, (uint8_t*) "000", 3, 1000);
 				sendZero = 1;
 			}
 		} else if (state == 1) {
+			sendTwo = 0;
 			if (sendOne == 0) {
-				print("1");
-				HAL_UART_Transmit(&huart6, (uint8_t*) "1", 1, 1000);
+				//print("1");
+				HAL_UART_Transmit(&huart6, (uint8_t*) "111", 3, 1000);
 				sendOne = 1;
 			}
 			//send 1
 			HAL_TIM_Base_Start_IT(&htim1);
-			if(isBackgroundFill == 0){
+			if (isBackgroundFill == 0) {
 
-			ILI9341_Draw_Image((const char*) image_data_tot, SCREEN_VERTICAL_2);
-			isBackgroundFill=1;
+				ILI9341_Draw_Image((const char*) image_data_tot,
+						SCREEN_VERTICAL_2);
+				isBackgroundFill = 1;
 			}
 			displayTime(minuteA, secondA);
 			ILI9341_Set_Rotation(SCREEN_HORIZONTAL_2);
@@ -226,10 +221,15 @@ int main(void)
 			displayTime(minuteB, secondB);
 			ILI9341_Draw_Text(timeString, 180, 140, WHITE, 3, BLACK);
 		} else if (state == 2) { //PAUSE
+			sendOne = 0;
+			if (sendTwo == 0) {
+							//print("2");
+							HAL_UART_Transmit(&huart6, (uint8_t*) "222", 3, 1000);
+							sendTwo = 1;
+						}
 			HAL_TIM_Base_Stop_IT(&htim1);
 			ILI9341_Draw_Image((const char*) image_data_pause,
 			SCREEN_VERTICAL_2);
-//			ILI9341_Draw_Text("Hello", 140, 100, WHITE, 4, YELLOW);
 		} else if (state == 3) {
 			//Picture
 			ILI9341_Draw_Image((const char*) image_data_end, SCREEN_VERTICAL_2);
