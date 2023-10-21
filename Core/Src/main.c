@@ -193,6 +193,7 @@ int main(void)
 			secondA = 0;
 			minuteB = 10;
 			secondB = 0;
+			sendTwo = 0;
 
 			if (sendZero == 0) {
 				//send 0
@@ -232,6 +233,11 @@ int main(void)
 			SCREEN_VERTICAL_2);
 		} else if (state == 3) {
 			//Picture
+			if (sendTwo == 0) {
+										//print("2");
+										HAL_UART_Transmit(&huart6, (uint8_t*) "222", 3, 1000);
+										sendTwo = 1;
+									}
 			ILI9341_Draw_Image((const char*) image_data_end, SCREEN_VERTICAL_2);
 
 		}
