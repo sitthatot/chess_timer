@@ -181,7 +181,6 @@ void EXTI3_IRQHandler(void)
   				sendZero = 0;
   				sendOne = 0;
   				state = 0;
-  				print("This is State 3");
   			}
   /* USER CODE END EXTI3_IRQn 1 */
 }

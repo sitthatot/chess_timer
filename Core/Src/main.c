@@ -65,15 +65,18 @@ uint8_t pwm;
 
 int minuteA = 10;
 int secondA = 0;
-
+char toDec45[2];
 int minuteB = 10;
 int secondB = 0;
 char timeString[10];
 int state = 0;
 int sendZero = 0;
 int sendOne = 0;
+int swing = 1;
 uint8_t playerSignal = 0; //0==white 1==black
 uint8_t isBackgroundFill = 0; //0 == pause
+uint8_t currentVal = 0; //0 == pause
+uint8_t lastVal = 0; //0 == pause
 char ch1;
 /* USER CODE END PV */
 
@@ -96,6 +99,25 @@ void displayTime(int minute, int second) {
 //	print("\r");
 //	print(timeString);
 }
+void display4096_to_45(uint32_t myNumber) {
+	currentVal = (45 * myNumber) / 4096;
+	if(currentVal != lastVal){
+		if (currentVal >= lastVal - swing && currentVal <= lastVal + swing) {
+		            // If it's within the swing range, don't update lastVal
+		        } else {
+		            lastVal = currentVal;
+		            sprintf(toDec45, "b%d", lastVal);
+		            print(toDec45);
+		            HAL_UART_Transmit(&huart6, (uint8_t*)toDec45, strlen(toDec45), 1000);
+		            print("\r\n");
+		        }
+	}
+
+}
+//void FindVin(uint32_t num) {
+//	vin = (3.6f * num) / 4096.0f;
+//	sprintf(vin_str, "%.2f", vin);
+//}
 /* USER CODE END 0 */
 
 /**
@@ -155,15 +177,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//		print("A");
-//		displayTime(minuteB, secondB);
-//		sprintf(stateString, "%2d", state);
-//		print(stateString);
-		//----------------------------------------------------------PERFORMANCE TEST
-//		if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET) {
-//			playerSignal = !playerSignal;
-//		}
+		while (HAL_ADC_PollForConversion(&hadc1, 100) != HAL_OK) {
+				}
+				adc_val = HAL_ADC_GetValue(&hadc1);
+				display4096_to_45(adc_val);
+
 		HAL_UART_Receive(&huart6, (uint8_t*) &ch1, 1, 1000);
+//		HAL_UART_Receive(&huart3, (uint8_t*) &ch1, 1, 1000);
 		if (ch1 == '0') {
 			playerSignal = 0;
 		} else if (ch1 == '1') {
@@ -176,8 +196,8 @@ int main(void)
 		if (state == 0) {
 			ILI9341_Draw_Image((const char*) image_data_setup,
 			SCREEN_VERTICAL_2);
-			minuteA = 0;
-			secondA = 10;
+			minuteA = 10;
+			secondA = 0;
 			minuteB = 10;
 			secondB = 0;
 
