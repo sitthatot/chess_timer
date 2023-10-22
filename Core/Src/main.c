@@ -105,10 +105,10 @@ void display4096_to_45(uint32_t myNumber) {
 		} else {
 			lastVal = currentVal;
 			sprintf(toDec45, "b%02d", lastVal);
-			//print(toDec45);
+//			print(toDec45);
+//			print("\r\n");
 			HAL_UART_Transmit(&huart6, (uint8_t*) toDec45, strlen(toDec45),
 					1000);
-			//print("\r\n");
 		}
 	}
 
@@ -182,6 +182,7 @@ int main(void)
 		} else if (ch1 == '1') {
 			playerSignal = 1;
 		}
+
 		if (state != 1) {
 			isBackgroundFill = 0;
 		}
@@ -205,6 +206,7 @@ int main(void)
 			sendTwo = 0;
 			if (sendOne == 0) {
 				//print("1");
+				print("111 issend");
 				HAL_UART_Transmit(&huart6, (uint8_t*) "111", 3, 1000);
 				sendOne = 1;
 			}
